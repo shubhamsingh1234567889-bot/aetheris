@@ -1,0 +1,48 @@
+# Render Blueprint - one web service that serves the React app AND the /api backend.
+# Secrets are `sync: false`: Render asks for them in the dashboard on first deploy.
+services:
+  - type: web
+    name: aetheris-sustainability-os
+    runtime: node
+    plan: free            # free instances sleep after ~15 min idle; use "starter" for always-on
+    region: oregon
+    # --include=dev: Render sets NODE_ENV=production, which would otherwise skip the build tools
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      # same-origin deployment needs no CORS; list extra origins here if a separate frontend calls the API
+      - key: CORS_ORIGINS
+        value: ""
+      # --- integrations (all optional; features degrade gracefully when unset) ---
+      - key: TINYFISH_API_KEY
+        sync: false
+      - key: WAQI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CLIMATIQ_API_KEY
+        sync: false
+      - key: ELECTRICITY_MAPS_API_KEY
+        sync: false
+      - key: SEC_USER_AGENT          # e.g. "Aetheris OS you@example.com" (required by SEC EDGAR)
+        sync: false
+      # --- infrastructure (optional) ---
+      - key: DATABASE_URL            # Postgres connection string; unset = in-memory store
+        sync: false
+      - key: REDIS_URL               # shared cache for multi-instance setups
+        sync: false
+      # --- auth (any OIDC provider's JWKS) ---
+      - key: AUTH_JWKS_URL
+        sync: false
+      - key: AUTH_ISSUER
+        sync: false
+      - key: AUTH_AUDIENCE
+        sync: false
